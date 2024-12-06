@@ -18,18 +18,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Debug step: List files
       - name: List files in the repository
         run: ls -la
 
-      # Linux and macOS: Set up C++ compiler
-      - name: Set up C++ compiler
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+      # Linux: Set up C++ compiler
+      - name: Set up C++ compiler (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y g++ make
 
-      - name: List files
-        run: ls -la
+      # macOS: Set up C++ compiler
+      - name: Set up C++ compiler (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install gcc make
 
       # Windows: Set up MSVC environment
       - name: Set up MSVC compiler
@@ -38,12 +43,18 @@ jobs:
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-      - name: List the files
+      # Debug step: List files
+      - name: List files in the repository2
         run: ls -la
 
       # Build the program
-      - name: Build udpsend (Linux/macOS)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+      - name: Build udpsend (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          g++ -o udpsend udpsend.cpp
+
+      - name: Build udpsend (macOS)
+        if: runner.os == 'macOS'
         run: |
           g++ -o udpsend udpsend.cpp
 
@@ -54,10 +65,16 @@ jobs:
           cl /EHsc udpsend.cpp ws2_32.lib /Feudpsend.exe
 
       # Test the program (optional)
-      - name: Test udpsend (Linux/macOS)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+      - name: Test udpsend (Linux)
+        if: runner.os == 'Linux'
         run: |
-          echo "Testing udpsend on Linux/macOS"
+          echo "Testing udpsend on Linux"
+          ./udpsend 127.0.0.1 12345 "Test Message"
+
+      - name: Test udpsend (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "Testing udpsend on macOS"
           ./udpsend 127.0.0.1 12345 "Test Message"
 
       - name: Test udpsend (Windows)
