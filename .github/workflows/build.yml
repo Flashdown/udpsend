@@ -48,15 +48,15 @@ jobs:
         run: ls -la
 
       # Build the program
-      - name: Build udpsend (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          g++ -o udpsend udpsend.cpp
+#      - name: Build udpsend (Linux)
+#        if: runner.os == 'Linux'
+#        run: |
+#          g++ -o udpsend udpsend.cpp
 
-      - name: Build udpsend (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          g++ -o udpsend udpsend.cpp
+#      - name: Build udpsend (macOS)
+#        if: runner.os == 'macOS'
+#        run: |
+#          g++ -o udpsend udpsend.cpp
 
       - name: Build udpsend (Windows)
         if: runner.os == 'Windows'
