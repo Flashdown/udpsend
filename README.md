@@ -1,3 +1,4 @@
+[![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white)](#) [![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff)](#) [![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=F0F0F0)](#)
 ![build](https://github.com/buttons/github-buttons/workflows/build/badge.svg) [![Github All Releases](https://img.shields.io/github/downloads/Flashdown/udpsend/total.svg)]() [![Latest release](https://img.shields.io/github/v/release/Flashdown/udpsend?color=blue&label=latest%20release)](https://github.com/Flashdown/udpsend/releases/latest)
 
 # udpsend 
