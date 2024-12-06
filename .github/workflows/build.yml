@@ -87,14 +87,14 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v3
         with:
-          name: udpsend-linux
+          name: udpsend
           path: ./udpsend
 
       - name: Upload artifact (macOS)
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v3
         with:
-          name: udpsend-macos
+          name: udpsend
           path: ./udpsend-macos
 
 
@@ -102,7 +102,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
         with:
-          name: udpsend-windows
+          name: udpsend
           path: ./udpsend.exe
 
   release:
@@ -118,12 +118,12 @@ jobs:
           path: ./artifacts
 
       - name: List downloaded artifacts
-        run: ls -la ./artifacts/udpsend-windows/;ls -la ./artifacts/;ls -la ./artifacts/udpsend-linux/;ls -la ./artifacts/udpsend-macos/;
+        run: ls -la ./artifacts/udpsend/;ls -la ./artifacts/;
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./artifacts/**/*
+          files: ./artifacts/udpsend/*
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
