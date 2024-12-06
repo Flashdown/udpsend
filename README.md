@@ -19,7 +19,7 @@ udpsend myinvalidserver.invalid 1234 HelloWorld
 ```
 Example sending a message:
 ```console
-udpsend myinvalidserver.invalid 1234 'Hello World, does anyone read me?'
+udpsend myinvalidserver.invalid 1234 "Hello World, does anyone read me?"
 ```
 * server: IPv4, IPv6 address or FQDN
 * port:   Port number to send the message to
