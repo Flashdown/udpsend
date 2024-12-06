@@ -37,7 +37,6 @@ void printUsage(const char* progName) {
     std::cerr << " This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
     std::cerr << " This is free software, and you are welcome to redistribute it" << std::endl;
     std::cerr << " under the conditions of the GNU General Public License Version 3" << std::endl;
-
 }
 
 int main(int argc, char* argv[]) {
@@ -60,7 +59,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     // Create socket
-    SOCKET sockfd;
+    int sockfd;
 #ifdef _WIN32
     sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sockfd == INVALID_SOCKET) {
@@ -96,7 +95,7 @@ int main(int argc, char* argv[]) {
 
     // Send the message
     int sent = sendto(sockfd, message.c_str(), static_cast<int>(message.length()), 0, res->ai_addr, static_cast<int>(res->ai_addrlen));
-    if (sent == SOCKET_ERROR) {
+    if (sent == -1) {
 #ifdef _WIN32
         std::cerr << "Failed to send message: " << WSAGetLastError() << std::endl;
         closesocket(sockfd);
