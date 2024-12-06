@@ -95,7 +95,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
         with:
-          name: udpsend.exe
+          name: udpsend-windows
           path: ./udpsend.exe
 
   release:
@@ -116,7 +116,8 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./artifacts/*
+#          files: ./artifacts/*
+          files: ./artifacts/**/*
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
