@@ -57,6 +57,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
+          set /p VS_PATH=<vs_path.txt
+          call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
           cl /EHsc udpsend.cpp ws2_32.lib /Feudpsend.exe
 
       # Test the program (optional)
