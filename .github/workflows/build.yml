@@ -20,18 +20,18 @@ jobs:
 
 
       # Linux: Set up C++ compiler
- #     - name: Set up C++ compiler (Linux)
- #       if: runner.os == 'Linux'
- #       run: |
- #         sudo apt-get update
- #         sudo apt-get install -y g++ make
+      - name: Set up C++ compiler (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ make
 
       # macOS: Set up C++ compiler
-#      - name: Set up C++ compiler (macOS)
-#        if: runner.os == 'macOS'
-#        run: |
-#          brew update
-#          brew install gcc make
+      - name: Set up C++ compiler (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install gcc make
 
       # Windows: Set up MSVC environment
       - name: Set up MSVC compiler
@@ -43,15 +43,15 @@ jobs:
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
 
       # Build the program
-#      - name: Build udpsend (Linux)
-#        if: runner.os == 'Linux'
-#        run: |
-#          g++ -o udpsend udpsend.cpp
+      - name: Build udpsend (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          g++ -o udpsend udpsend.cpp
 
-#      - name: Build udpsend (macOS)
-#        if: runner.os == 'macOS'
-#        run: |
-#          g++ -o udpsend udpsend.cpp
+      - name: Build udpsend (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          g++ -o udpsend udpsend.cpp
 
       - name: Build udpsend (Windows)
         if: runner.os == 'Windows'
@@ -63,11 +63,11 @@ jobs:
           cl /EHsc udpsend.cpp ws2_32.lib /Feudpsend.exe
 
       # Test the program (optional)
-#      - name: Test udpsend (Linux)
-#        if: runner.os == 'Linux'
-#        run: |
-#          echo "Testing udpsend on Linux"
-#          ./udpsend 127.0.0.1 12345 "Test Message"
+      - name: Test udpsend (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          echo "Testing udpsend on Linux"
+          ./udpsend 127.0.0.1 12345 "Test Message"
 
 #      - name: Test udpsend (macOS)
 #        if: runner.os == 'macOS'
@@ -84,12 +84,12 @@ jobs:
 
 
       # Upload the binary artifact
-#      - name: Upload artifact (Linux/macOS)
-#        if: runner.os == 'Linux' || runner.os == 'macOS'
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: udpsend-${{ matrix.os }}
-#          path: ./udpsend
+      - name: Upload artifact (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        uses: actions/upload-artifact@v3
+        with:
+          name: udpsend-${{ matrix.os }}
+          path: ./udpsend
 
       - name: Upload artifact (Windows)
         if: runner.os == 'Windows'
@@ -111,7 +111,7 @@ jobs:
           path: ./artifacts
 
       - name: List downloaded artifacts
-        run: ls -la ./artifacts/udpsend-windows/
+        run: ls -la ./artifacts/udpsend-windows/ls -la ./artifacts/;ls -la ./artifacts/udpsend-linux;
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
