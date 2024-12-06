@@ -51,7 +51,7 @@ jobs:
       - name: Build udpsend (macOS)
         if: runner.os == 'macOS'
         run: |
-          g++ -o udpsend udpsend.cpp
+          g++ -o udpsend-macos udpsend.cpp
 
       - name: Build udpsend (Windows)
         if: runner.os == 'Windows'
@@ -69,11 +69,11 @@ jobs:
           echo "Testing udpsend on Linux"
           ./udpsend 127.0.0.1 12345 "Test Message"
 
-#      - name: Test udpsend (macOS)
-#        if: runner.os == 'macOS'
-#        run: |
-#          echo "Testing udpsend on macOS"
-#          ./udpsend 127.0.0.1 12345 "Test Message"
+      - name: Test udpsend (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "Testing udpsend on macOS"
+          ./udpsend-macos 127.0.0.1 12345 "Test Message"
 
       - name: Test udpsend (Windows)
         if: runner.os == 'Windows'
@@ -111,7 +111,7 @@ jobs:
           path: ./artifacts
 
       - name: List downloaded artifacts
-        run: ls -la ./artifacts/udpsend-windows/ls -la ./artifacts/;ls -la ./artifacts/udpsend-linux;
+        run: ls -la ./artifacts/udpsend-windows/;ls -la ./artifacts/;ls -la ./artifacts/udpsend-ubuntu-latest/;ls -la ./artifacts/udpsend-macos-latest/;
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
