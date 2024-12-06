@@ -1,0 +1,59 @@
+name: Build udpsend
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Linux and macOS: Set up C++ compiler
+      - name: Set up C++ compiler
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ make
+
+      # Windows: Set up MSVC environment
+      - name: Set up MSVC compiler
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+      # Build the program
+      - name: Build udpsend (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: |
+          g++ -o udpsend udpsend.cpp
+
+      - name: Build udpsend (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cl /EHsc udpsend.cpp ws2_32.lib /Feudpsend.exe
+
+      # Test the program (optional)
+      - name: Test udpsend (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: |
+          echo "Testing udpsend on Linux/macOS"
+          ./udpsend 127.0.0.1 12345 "Test Message"
+
+      - name: Test udpsend (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          echo "Testing udpsend on Windows"
+          udpsend.exe 127.0.0.1 12345 "Test Message"
