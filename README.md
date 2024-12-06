@@ -11,6 +11,6 @@ Example:
 ```console
 udpsend.exe myinvalidserver.invalid 1234 HelloWorld
 ```
-server: IPv4, IPv6 address or FQDN
-port:   Port number to send the message to
-message: Message to send via UDP
+* server: IPv4, IPv6 address or FQDN
+* port:   Port number to send the message to
+* message: Message to send via UDP
