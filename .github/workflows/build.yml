@@ -18,6 +18,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: List files in the repository
+        run: ls -la
+
       # Linux and macOS: Set up C++ compiler
       - name: Set up C++ compiler
         if: runner.os == 'Linux' || runner.os == 'macOS'
@@ -25,12 +28,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y g++ make
 
+      - name: List files
+        run: ls -la
+
       # Windows: Set up MSVC environment
       - name: Set up MSVC compiler
         if: runner.os == 'Windows'
         shell: cmd
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+      - name: List the files
+        run: ls -la
 
       # Build the program
       - name: Build udpsend (Linux/macOS)
