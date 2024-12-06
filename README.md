@@ -7,7 +7,7 @@ https://github.com/Flashdown/udpsend/releases/download/udpsend_0.1/udpsend.exe
 ## Usage:
 
 ```console
-udpsend.exe <server> <port> <message>
+udpsend <server> <port> <message>
 ```
 
 Example:
