@@ -110,6 +110,9 @@ jobs:
         with:
           path: ./artifacts
 
+      - name: List downloaded artifacts
+        run: ls -la ./artifacts
+
       # Publish the release
       - name: Create GitHub release
         uses: actions/create-release@v1
