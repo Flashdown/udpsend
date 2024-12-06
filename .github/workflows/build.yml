@@ -82,14 +82,21 @@ jobs:
           echo "Testing udpsend on Windows"
           udpsend.exe 127.0.0.1 12345 "Test Message"
 
-
-      # Upload the binary artifact
-      - name: Upload artifact (Linux/macOS)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+       # Upload the binary artifact
+      - name: Upload artifact (Linux)
+        if: runner.os == 'Linux'
         uses: actions/upload-artifact@v3
         with:
-          name: udpsend-${{ matrix.os }}
+          name: udpsend-linux
           path: ./udpsend
+
+      - name: Upload artifact (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v3
+        with:
+          name: udpsend-macos
+          path: ./udpsend-macos
+
 
       - name: Upload artifact (Windows)
         if: runner.os == 'Windows'
@@ -111,34 +118,12 @@ jobs:
           path: ./artifacts
 
       - name: List downloaded artifacts
-        run: ls -la ./artifacts/udpsend-windows/;ls -la ./artifacts/;ls -la ./artifacts/udpsend-ubuntu-latest/;ls -la ./artifacts/udpsend-macos-latest/;
+        run: ls -la ./artifacts/udpsend-windows/;ls -la ./artifacts/;ls -la ./artifacts/udpsend-linux/;ls -la ./artifacts/udpsend-macos/;
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-#          files: ./artifacts/*
           files: ./artifacts/**/*
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-      # Publish the release
-#      - name: Create GitHub release
-#        uses: actions/create-release@v1
-#        with:
- #         tag_name: ${{ github.ref_name }}
- #         release_name: "Release ${{ github.ref_name }}"
- #         body: "Auto-generated release for tag ${{ github.ref_name }}."
-  #        files: ./artifacts/* # Correctly reference the downloaded artifacts
-  #        draft: true
-  #        prerelease: true
- #       env:
- #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: Create GitHub Release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          files: ./artifacts/*
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
