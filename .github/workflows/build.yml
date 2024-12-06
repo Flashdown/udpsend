@@ -113,18 +113,33 @@ jobs:
       - name: List downloaded artifacts
         run: ls -la ./artifacts
 
-      # Publish the release
-      - name: Create GitHub release
-        uses: actions/create-release@v1
+     - name: Download artifacts
+        uses: actions/download-artifact@v3
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: "Release ${{ github.ref_name }}"
-          body: "Auto-generated release for tag ${{ github.ref_name }}."
-          files: ./artifacts/* # Correctly reference the downloaded artifacts
+          path: ./artifacts
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/*
           draft: true
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      # Publish the release
+#      - name: Create GitHub release
+#        uses: actions/create-release@v1
+#        with:
+ #         tag_name: ${{ github.ref_name }}
+ #         release_name: "Release ${{ github.ref_name }}"
+ #         body: "Auto-generated release for tag ${{ github.ref_name }}."
+  #        files: ./artifacts/* # Correctly reference the downloaded artifacts
+  #        draft: true
+  #        prerelease: true
+ #       env:
+ #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #      - name: Create GitHub Release
 #        uses: softprops/action-gh-release@v1
