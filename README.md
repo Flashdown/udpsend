@@ -4,8 +4,11 @@
 # udpsend 
 udpsend is a simple udp sender tool written in C++ that allows to send a string or message via UDP to a specific IP and port.
 
-## Download binary Windows release of udpsend V0.1 from here:
-https://github.com/Flashdown/udpsend/releases/download/udpsend_0.1/udpsend.exe
+## udpsend v0.2 - Download latest binary releases
+
+* Windows: https://github.com/Flashdown/udpsend/releases/download/udpsend_0.2/udpsend.exe
+* Linux: https://github.com/Flashdown/udpsend/releases/download/udpsend_0.2/udpsend_linux
+* MacOS: https://github.com/Flashdown/udpsend/releases/download/udpsend_0.2/udpsend_macos
 
 ## Usage:
 
