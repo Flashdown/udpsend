@@ -18,7 +18,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-
       # Linux: Set up C++ compiler
       - name: Set up C++ compiler (Linux)
         if: runner.os == 'Linux'
@@ -46,12 +45,12 @@ jobs:
       - name: Build udpsend (Linux)
         if: runner.os == 'Linux'
         run: |
-          g++ -o udpsend udpsend.cpp
+          g++ -o udpsend_linux udpsend.cpp
 
       - name: Build udpsend (macOS)
         if: runner.os == 'macOS'
         run: |
-          g++ -o udpsend-macos udpsend.cpp
+          g++ -o udpsend_macos udpsend.cpp
 
       - name: Build udpsend (Windows)
         if: runner.os == 'Windows'
@@ -67,13 +66,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           echo "Testing udpsend on Linux"
-          ./udpsend 127.0.0.1 12345 "Test Message"
+          ./udpsend_linux 127.0.0.1 12345 "Test Message"
 
       - name: Test udpsend (macOS)
         if: runner.os == 'macOS'
         run: |
           echo "Testing udpsend on macOS"
-          ./udpsend-macos 127.0.0.1 12345 "Test Message"
+          ./udpsend_macos 127.0.0.1 12345 "Test Message"
 
       - name: Test udpsend (Windows)
         if: runner.os == 'Windows'
@@ -88,15 +87,14 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: udpsend
-          path: ./udpsend
+          path: ./udpsend_linux
 
       - name: Upload artifact (macOS)
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v3
         with:
           name: udpsend
-          path: ./udpsend-macos
-
+          path: ./udpsend_macos
 
       - name: Upload artifact (Windows)
         if: runner.os == 'Windows'
