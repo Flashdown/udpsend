@@ -18,9 +18,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Debug step: List files
-      - name: List files in the repository
-        run: ls -la
 
       # Linux: Set up C++ compiler
  #     - name: Set up C++ compiler (Linux)
