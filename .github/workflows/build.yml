@@ -81,3 +81,50 @@ jobs:
         run: |
           echo "Testing udpsend on Windows"
           udpsend.exe 127.0.0.1 12345 "Test Message"
+
+
+      # Upload the binary artifact
+#      - name: Upload artifact (Linux/macOS)
+#        if: runner.os == 'Linux' || runner.os == 'macOS'
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: udpsend-${{ matrix.os }}
+#          path: ./udpsend
+
+      - name: Upload artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v3
+        with:
+          name: udpsend-${{ matrix.os }}
+          path: ./udpsend.exe
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Download the artifacts from the build job
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: udpsend-${{ matrix.os }}
+          path: ./artifacts
+
+      # Publish the release
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: "Release ${{ github.ref_name }}"
+          body: "Auto-generated release for tag ${{ github.ref_name }}."
+          files: ./artifacts/* # Correctly reference the downloaded artifacts
+          draft: false
+          prerelease: false
+
+#      - name: Create GitHub Release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          files: ./artifacts/*
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
