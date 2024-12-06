@@ -113,11 +113,6 @@ jobs:
       - name: List downloaded artifacts
         run: ls -la ./artifacts
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: ./artifacts
-
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
