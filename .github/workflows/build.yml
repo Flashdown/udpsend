@@ -23,18 +23,18 @@ jobs:
         run: ls -la
 
       # Linux: Set up C++ compiler
-      - name: Set up C++ compiler (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++ make
+ #     - name: Set up C++ compiler (Linux)
+ #       if: runner.os == 'Linux'
+ #       run: |
+ #         sudo apt-get update
+ #         sudo apt-get install -y g++ make
 
       # macOS: Set up C++ compiler
-      - name: Set up C++ compiler (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew update
-          brew install gcc make
+#      - name: Set up C++ compiler (macOS)
+#        if: runner.os == 'macOS'
+#        run: |
+#          brew update
+#          brew install gcc make
 
       # Windows: Set up MSVC environment
       - name: Set up MSVC compiler
@@ -45,7 +45,7 @@ jobs:
 
       # Debug step: List files
       - name: List files in the repository2
-        run: ls -la
+        run: dir
 
       # Build the program
 #      - name: Build udpsend (Linux)
