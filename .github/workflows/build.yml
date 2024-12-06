@@ -121,8 +121,10 @@ jobs:
           release_name: "Release ${{ github.ref_name }}"
           body: "Auto-generated release for tag ${{ github.ref_name }}."
           files: ./artifacts/* # Correctly reference the downloaded artifacts
-          draft: false
-          prerelease: false
+          draft: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #      - name: Create GitHub Release
 #        uses: softprops/action-gh-release@v1
