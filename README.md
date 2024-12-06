@@ -1,5 +1,7 @@
-# udpsend ![build](https://github.com/buttons/github-buttons/workflows/build/badge.svg) [![Github All Releases](https://img.shields.io/github/downloads/Flashdown/udpsend/total.svg)]()
-udpsend is a simple udp sender tool written in C++ that allows to send a string/message via UDP to a specific IP and port.
+![build](https://github.com/buttons/github-buttons/workflows/build/badge.svg) [![Github All Releases](https://img.shields.io/github/downloads/Flashdown/udpsend/total.svg)]() [![Latest release](https://img.shields.io/github/v/release/Flashdown/udpsend?color=blue&label=latest%20release)](https://github.com/Flashdown/udpsend/releases/latest)
+
+# udpsend 
+udpsend is a simple udp sender tool written in C++ that allows to send a string or message via UDP to a specific IP and port.
 
 ## Download binary Windows release of udpsend V0.1 from here:
 https://github.com/Flashdown/udpsend/releases/download/udpsend_0.1/udpsend.exe
