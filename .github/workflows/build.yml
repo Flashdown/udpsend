@@ -111,7 +111,7 @@ jobs:
           path: ./artifacts
 
       - name: List downloaded artifacts
-        run: ls -la ./artifacts
+        run: ls -la ./artifacts/udpsend-windows/
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
