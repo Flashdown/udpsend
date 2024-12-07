@@ -33,7 +33,7 @@ const size_t MAX_UDP_MESSAGE_SIZE = 65507; // Maximum size for UDP payload
 
 void printUsage(const char* progName) {
     std::cerr << std::endl << " udpsend v0.4 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
-    std::cerr << " https://github.com/Flashdown/udpsend" << std::endl; << std::endl;
+    std::cerr << " https://github.com/Flashdown/udpsend" << std::endl << std::endl;
 
     std::cerr << " This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
     std::cerr << " This is free software, and you are welcome to redistribute it" << std::endl;
