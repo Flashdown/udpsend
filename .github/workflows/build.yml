@@ -45,12 +45,12 @@ jobs:
       - name: Build udpsend (Linux)
         if: runner.os == 'Linux'
         run: |
-          g++ -o udpsend_linux udpsend.cpp
+          g++ -o udpsend_linux udpsend.cpp -O2 -s -std=c++11
 
       - name: Build udpsend (macOS)
         if: runner.os == 'macOS'
         run: |
-          g++ -o udpsend_macos udpsend.cpp
+          g++ -o udpsend_macos udpsend.cpp -O2 -s -std=c++11
 
       - name: Build udpsend (Windows)
         if: runner.os == 'Windows'
@@ -59,7 +59,7 @@ jobs:
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
           set /p VS_PATH=<vs_path.txt
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
-          cl /EHsc udpsend.cpp ws2_32.lib /Feudpsend.exe
+          cl /EHsc /O2 /MD udpsend.cpp ws2_32.lib /Feudpsend.exe
 
       # Test the program (optional)
       - name: Test udpsend (Linux)
