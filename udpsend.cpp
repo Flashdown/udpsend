@@ -32,7 +32,7 @@ void printUsage(const char* progName) {
     std::cerr << "  server: IPv4, IPv6 address or FQDN" << std::endl;
     std::cerr << "  port:   Port number to send the message to" << std::endl;
     std::cerr << "  message: Message to send via UDP" << std::endl;
-    
+
     std::cerr << std::endl << " udpsend v0.2 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
     std::cerr << " This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
     std::cerr << " This is free software, and you are welcome to redistribute it" << std::endl;
@@ -59,16 +59,15 @@ int main(int argc, char* argv[]) {
 #endif
 
     // Create socket
-    int sockfd;
 #ifdef _WIN32
-    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    SOCKET sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sockfd == INVALID_SOCKET) {
         std::cerr << "Socket creation failed: " << WSAGetLastError() << std::endl;
         WSACleanup();
         return EXIT_FAILURE;
     }
 #else
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         perror("Failed to create socket");
         return EXIT_FAILURE;
@@ -76,7 +75,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     // Resolve server address
-    struct addrinfo hints, * res;
+    struct addrinfo hints, *res;
     std::memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;       // Allow IPv4 or IPv6
     hints.ai_socktype = SOCK_DGRAM;   // Datagram socket
