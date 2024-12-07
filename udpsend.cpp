@@ -1,4 +1,4 @@
-// udpsend v0.3 Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
+// udpsend v0.4 Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License Version 3 as
@@ -33,7 +33,7 @@ void printUsage(const char* progName) {
     std::cerr << "  port:   Port number to send the message to" << std::endl;
     std::cerr << "  message: Message to send via UDP" << std::endl;
 
-    std::cerr << std::endl << " udpsend v0.3 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
+    std::cerr << std::endl << " udpsend v0.4 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
     std::cerr << " This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
     std::cerr << " This is free software, and you are welcome to redistribute it" << std::endl;
     std::cerr << " under the conditions of the GNU General Public License Version 3" << std::endl;
