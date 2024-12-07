@@ -40,14 +40,30 @@ void printUsage(const char* progName) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
+    std::string server;
+    int port;
+    std::string message;
+
+    if (argc == 4) {
+        server = argv[1];
+        port = std::stoi(argv[2]);
+        message = argv[3];
+    } else if (argc == 3) {
+
+        server = argv[1];
+        port = std::stoi(argv[2]);
+
+        std::cout << "Enter the message to send: ";
+        std::getline(std::cin, message);
+
+        if (message.empty()) {
+            std::cerr << "Error: Message cannot be empty." << std::endl;
+            return EXIT_FAILURE;
+        }
+    } else {
         printUsage(argv[0]);
         return EXIT_FAILURE;
     }
-
-    std::string server = argv[1];
-    int port = std::stoi(argv[2]);
-    std::string message = argv[3];
 
 #ifdef _WIN32
     // Initialize Winsock
