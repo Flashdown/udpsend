@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Validate port
-            if (argv[2].length() > MAX_PORT_LENGTH) {
+            if (strlen(argv[2]) > MAX_PORT_LENGTH) {
                 throw std::invalid_argument("Port number is too long.");
             }
             if (!isValidPort(argv[2])) {
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Validate port
-            if (argv[2].length() > MAX_PORT_LENGTH) {
+            if (strlen(argv[2]) > MAX_PORT_LENGTH) {
                 throw std::invalid_argument("Port number is too long.");
             }
             if (!isValidPort(argv[2])) {
