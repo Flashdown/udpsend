@@ -76,8 +76,13 @@ jobs:
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
           set /p VS_PATH=<vs_path.txt
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
-          echo "checking for libidn"
-          dir %VCPKG_ROOT%\installed\x64-windows\lib
+
+          REM Echo directory listings
+          echo "Checking for libidn2.h in include directory:"
+          dir "%VCPKG_ROOT%\installed\x64-windows\include\libidn2.h"
+
+          echo "Checking for libidn2.lib in lib directory:"
+          dir "%VCPKG_ROOT%\installed\x64-windows\lib\libidn2.lib"
 
           REM Build with vcpkg's installed libidn2
           cl /EHsc /O2 /MD udpsend.cpp /I "%VCPKG_ROOT%\installed\x64-windows\include" /link /LIBPATH:"%VCPKG_ROOT%\installed\x64-windows\lib" libidn2.lib ws2_32.lib /Feudpsend.exe
