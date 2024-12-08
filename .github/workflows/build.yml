@@ -56,11 +56,11 @@ jobs:
           call "%VCPKG_ROOT%\vcpkg.exe" install libidn2:x64-windows --verbose
           if errorlevel 1 exit /b %errorlevel%
 
-         echo Checking vcpkg include directory:
-         dir "%VCPKG_ROOT%\installed\x64-windows\include\*"
+          echo Checking vcpkg include directory:
+          dir "%VCPKG_ROOT%\installed\x64-windows\include\*"
 
-         echo Checking vcpkg root directory:
-         dir "%VCPKG_ROOT%\*"
+          echo Checking vcpkg root directory:
+          dir "%VCPKG_ROOT%\*"
 
       # Build the program
       - name: Build udpsend (Linux)
