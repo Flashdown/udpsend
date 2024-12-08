@@ -18,6 +18,7 @@
 #include <iostream>
 #include <regex>
 #include <stdexcept>
+#include <limits>
 #include <idn2.h> // For IDN conversion
 
 #ifdef _WIN32
