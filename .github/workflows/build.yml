@@ -59,7 +59,7 @@ jobs:
       - name: Build udpsend (Linux)
         if: runner.os == 'Linux'
         run: |
-          g++ -o udpsend_linux udpsend.cpp -O2 -s -std=c++11
+          g++ -o udpsend_linux udpsend.cpp -O2 -s -std=c++11 -lidn2
 
       - name: Build udpsend (macOS)
         if: runner.os == 'macOS'
