@@ -49,8 +49,12 @@ jobs:
           REM Install libidn2 via vcpkg
           "%VCPKG_ROOT%\vcpkg.exe" install libidn2
 
-          REM Set the environment variables for MSVC and vcpkg
+          REM Set environment variables for MSVC and vcpkg
           set PATH=%VCPKG_ROOT%\vcpkg.exe;%PATH%
+          set INCLUDE=%VCPKG_ROOT%\installed\x64-windows\include;%INCLUDE%
+          set LIB=%VCPKG_ROOT%\installed\x64-windows\lib;%LIB%
+
+          REM Use vswhere to find Visual Studio installation path
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
           set /p VS_PATH=<vs_path.txt
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
@@ -72,7 +76,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          REM Set up MSVC environment
+          REM Set the environment variables for MSVC and vcpkg
+          set PATH=%VCPKG_ROOT%\vcpkg.exe;%PATH%
+          set INCLUDE=%VCPKG_ROOT%\installed\x64-windows\include;%INCLUDE%
+          set LIB=%VCPKG_ROOT%\installed\x64-windows\lib;%LIB%
+
+          REM Use vswhere to find Visual Studio installation path
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
           set /p VS_PATH=<vs_path.txt
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
@@ -100,7 +109,7 @@ jobs:
           echo "Testing udpsend on Windows"
           udpsend.exe 127.0.0.1 12345 "Test Message"
 
-       # Upload the binary artifact
+      # Upload the binary artifact
       - name: Upload artifact (Linux)
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v3
