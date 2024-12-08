@@ -91,10 +91,8 @@ jobs:
           echo Checking vcpkg root directory:
           dir "C:\vcpkg\"
 
-
-
           REM Build with vcpkg's installed libidn2
-          cl /EHsc /O2 /MD udpsend.cpp /I "%VCPKG_ROOT%\installed\x64-windows\include" /link /LIBPATH:"%VCPKG_ROOT%\installed\x64-windows\lib" libidn2.lib ws2_32.lib /Feudpsend.exe
+          cl /EHsc /O2 /MD udpsend.cpp /I "C:\vcpkg\installed\x64-windows\include" /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" libidn2.lib ws2_32.lib /Feudpsend.exe
 
       # Test the program (optional)
       - name: Test udpsend (Linux)
