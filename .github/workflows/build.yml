@@ -23,14 +23,15 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++ make
+          sudo apt-get dist-upgrade -y
+          sudo apt-get install -y g++ make libidn2-0 libidn2-dev
 
       # macOS: Set up C++ compiler
       - name: Set up C++ compiler (macOS)
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install gcc make
+          brew install gcc make libidn2
 
       # Windows: Set up MSVC environment
       - name: Set up MSVC compiler
@@ -125,4 +126,3 @@ jobs:
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
- 
