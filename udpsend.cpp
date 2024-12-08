@@ -18,6 +18,7 @@
 #include <iostream>
 #include <regex>
 #include <stdexcept>
+#include <idn2.h> // For IDN conversion
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -56,14 +57,44 @@ bool isValidPort(const std::string& portStr) {
     return false;
 }
 
-bool isValidServer(const std::string& server) {
+bool isValidServer(std::string& server) {
     std::regex ipv4SimpleRegex("^[0-9.]+$");
     std::regex ipv6Regex("^[0-9a-fA-F:]+$");
-    std::regex domainRegex("^([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$");
 
-    return (std::regex_match(server, ipv4SimpleRegex) ||
-            std::regex_match(server, ipv6Regex) ||
-            std::regex_match(server, domainRegex));
+    // Expanded regex for IDNs, including explicit support for various character sets
+    std::regex idnDomainRegex(
+        "^([a-zA-Z0-9\\-"
+        "äöüßÄÖÜ"           // German Umlauts
+        "åæøÅÆØ"           // Scandinavian characters
+        "éèàçôãó"           // French and Portuguese accents
+        "α-ωΑ-Ω"           // Greek alphabet
+        "А-яЁёІіЇїЄєҐґ"     // Cyrillic alphabet
+        "一-龯"             // Chinese characters (Simplified and Traditional)
+        "ぁ-んァ-ン"         // Japanese Hiragana and Katakana
+        "가-힣"             // Korean Hangul
+        "א-ת"               // Hebrew script
+        "ء-ي"               // Arabic script
+        "]+\\.)+[a-zA-Z]{2,}$"
+    );
+
+    // Check if the server is an IP address
+    if (std::regex_match(server, ipv4SimpleRegex) || std::regex_match(server, ipv6Regex)) {
+        return true;
+    }
+
+    // Validate domain name structure
+    if (std::regex_match(server, idnDomainRegex)) {
+        // Attempt to convert IDN to ASCII (Punycode)
+        char* punycode = nullptr;
+        if (idn2_to_ascii_8z(server.c_str(), &punycode, 0) == IDN2_OK) {
+            server = punycode; // Replace server with Punycode equivalent
+            idn2_free(punycode); // Free allocated memory
+            return true;
+        }
+    }
+
+    // Invalid server if no conditions are met
+    return false;
 }
 
 bool isValidMessage(const std::string& message) {
