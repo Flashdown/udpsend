@@ -79,13 +79,13 @@ jobs:
 
           REM Echo directory listings
           echo "Checking for libidn2.h in include directory:"
-          dir "%VCPKG_ROOT%\installed\x64-windows\include\libidn2.h"
+          dir "%VCPKG_ROOT%\installed\x64-windows\include\"
 
           echo "Checking for libidn2.lib in lib directory:"
-          dir "%VCPKG_ROOT%\installed\x64-windows\lib\libidn2.lib"
+          dir "%VCPKG_ROOT%\installed\x64-windows\lib\"
 
           REM Build with vcpkg's installed libidn2
-          cl /EHsc /O2 /MD udpsend.cpp /I "%VCPKG_ROOT%\installed\x64-windows\include" /link /LIBPATH:"%VCPKG_ROOT%\installed\x64-windows\lib" libidn2.lib ws2_32.lib /Feudpsend.exe
+          cl /EHsc /O2 /MD udpsend.cpp /link /I "%VCPKG_ROOT%\installed\x64-windows\include" /LIBPATH:"%VCPKG_ROOT%\installed\x64-windows\lib" libidn2.lib ws2_32.lib /Feudpsend.exe
 
       # Test the program (optional)
       - name: Test udpsend (Linux)
