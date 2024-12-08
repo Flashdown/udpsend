@@ -11,7 +11,7 @@ udpsend is a simple udp sender tool written in C++ that allows to send a string 
 * **MacOS**: https://github.com/Flashdown/udpsend/releases/download/udpsend_v0.5/udpsend_macos
 
 ## interactive Usage:
-enter the message argument interactivly by simply not passing the \<message\> argument:
+you can enter the message interactivly by simply not passing the \<message\> argument:
 ```console
 udpsend <server> <port> 
 ```
