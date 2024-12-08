@@ -79,7 +79,7 @@ jobs:
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
 
           REM Install libidn2 via vcpkg
-          call "C:\vcpkg\vcpkg.exe install libidn2"
+          C:\vcpkg\vcpkg.exe install libidn2
           if errorlevel 1 exit /b %errorlevel%
 
           echo Checking vcpkg include directory:
