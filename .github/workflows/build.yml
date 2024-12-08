@@ -51,16 +51,23 @@ jobs:
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
           set /p VS_PATH=<vs_path.txt
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
+          if errorlevel 1 (
+              echo Error: vcvars64.bat failed.
+              exit /b %errorlevel%
+          )
 
           REM Install libidn2 via vcpkg
-          call "%VCPKG_ROOT%\vcpkg.exe" install libidn2:x64-windows --verbose
+          call "%VCPKG_ROOT%\vcpkg.exe install libidn2:x64-windows --verbose"
           if errorlevel 1 exit /b %errorlevel%
 
           echo Checking vcpkg include directory:
-          dir "%VCPKG_ROOT%\installed\x64-windows\include\*"
+          dir "%VCPKG_ROOT%\installed\x64-windows\include\"
+
+          echo Checking vcpkg include directory:
+          dir "%VCPKG_ROOT%\installed\x64-windows\include\"
 
           echo Checking vcpkg root directory:
-          dir "%VCPKG_ROOT%\*"
+          dir "%VCPKG_ROOT%\"
 
       # Build the program
       - name: Build udpsend (Linux)
