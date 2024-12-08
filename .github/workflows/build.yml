@@ -64,7 +64,9 @@ jobs:
       - name: Build udpsend (macOS)
         if: runner.os == 'macOS'
         run: |
-          g++ -o udpsend_macos udpsend.cpp -O2 -s -std=c++11
+          g++ -o udpsend_macos udpsend.cpp -O2 -s -std=c++11 \
+          -I/opt/homebrew/opt/libidn2/include \
+          -L/opt/homebrew/opt/libidn2/lib -lidn2
 
       - name: Build udpsend (Windows)
         if: runner.os == 'Windows'
