@@ -96,7 +96,7 @@ jobs:
           C:\vcpkg\vcpkg.exe integrate install
 
           REM Build with vcpkg's installed libidn2
-          cl /EHsc /O2 /MD udpsend.cpp /I"C:\vcpkg\installed\x64-windows\include" idn2.lib ws2_32.lib /Feudpsend.exe /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib"
+          cl /EHsc /O2 /MD udpsend.cpp /I"C:\vcpkg\installed\x64-windows\include" libidn2.lib ws2_32.lib /Feudpsend.exe /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib"
 
       # Test the program (optional)
       - name: Test udpsend (Linux)
