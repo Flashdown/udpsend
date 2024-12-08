@@ -106,9 +106,28 @@ int main(int argc, char* argv[]) {
             }
             port = std::stoi(argv[2]);
 
-            std::cout << "Enter the message to send: ";
-            std::getline(std::cin, message);
+            // Use std::cin.read() to limit message input to MAX_UDP_MESSAGE_SIZE
+            char buffer[MAX_UDP_MESSAGE_SIZE + 1];  // +1 for the null terminator
 
+            std::cout << "Enter the message to send: ";
+
+            // Read up to MAX_UDP_MESSAGE_SIZE characters
+            std::cin.read(buffer, MAX_UDP_MESSAGE_SIZE);
+
+            // Handle overflow if the input exceeds MAX_UDP_MESSAGE_SIZE
+            if (std::cin.gcount() == MAX_UDP_MESSAGE_SIZE) {
+                std::cout << "Warning: Input exceeds the maximum allowed size. Truncating input." << std::endl;
+                // Optionally clear the rest of the input buffer
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
+
+            // Null-terminate the string
+            buffer[std::cin.gcount()] = '\0';
+
+            // Convert buffer to string
+            message = buffer;
+
+            // Validation after reading the input
             if (message.empty()) {
                 throw std::invalid_argument("Message cannot be empty.");
             }
