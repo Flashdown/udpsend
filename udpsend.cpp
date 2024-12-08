@@ -30,6 +30,8 @@
 #endif
 
 const size_t MAX_UDP_MESSAGE_SIZE = 65507; // Maximum size for UDP payload
+const size_t MAX_SERVER_LENGTH = 200;     // Max length for server string (IPv4, IPv6, or domain name)
+const size_t MAX_PORT_LENGTH = 5;         // Max length for port string
 
 void printUsage(const char* progName) {
     std::cerr << std::endl << " udpsend v0.5 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
@@ -49,7 +51,7 @@ bool isValidPort(const std::string& portStr) {
     std::regex portRegex("^[0-9]+$");
     if (std::regex_match(portStr, portRegex)) {
         int port = std::stoi(portStr);
-        return port >= 1 && port <= 65535; // Valid port range
+        return port >= 1 && port <= 65535;
     }
     return false;
 }
@@ -59,19 +61,14 @@ bool isValidServer(const std::string& server) {
     std::regex ipv6Regex("^[0-9a-fA-F:]+$");
     std::regex domainRegex("^([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$");
 
-    // Allow a server name or IP address up to 200 characters
-    return (server.length() <= 200 &&
-            (std::regex_match(server, ipv4SimpleRegex) ||
-             std::regex_match(server, ipv6Regex) ||
-             std::regex_match(server, domainRegex)));
+    return (std::regex_match(server, ipv4SimpleRegex) ||
+            std::regex_match(server, ipv6Regex) ||
+            std::regex_match(server, domainRegex));
 }
 
 bool isValidMessage(const std::string& message) {
-    // Regex allows A-Z, a-z, 0-9, whitespace, special characters, and German umlauts
     std::regex messageRegex("^[A-Za-z0-9\\s!@#$%^&*()_+\\-=\\[\\]{};:'\",.<>?/|`~äöüÄÖÜß]*$");
-
-    // Check message length and content
-    return message.length() <= MAX_UDP_MESSAGE_SIZE && std::regex_match(message, messageRegex);
+    return std::regex_match(message, messageRegex);
 }
 
 int main(int argc, char* argv[]) {
@@ -81,26 +78,46 @@ int main(int argc, char* argv[]) {
 
     try {
         if (argc == 4) {
+            // Validate server
             server = argv[1];
+            if (server.length() > MAX_SERVER_LENGTH) {
+                throw std::invalid_argument("Server address is too long.");
+            }
             if (!isValidServer(server)) {
                 throw std::invalid_argument("Invalid server address or domain name.");
             }
 
+            // Validate port
+            if (argv[2].length() > MAX_PORT_LENGTH) {
+                throw std::invalid_argument("Port number is too long.");
+            }
             if (!isValidPort(argv[2])) {
                 throw std::invalid_argument("Invalid port number. Must be between 1 and 65535.");
             }
             port = std::stoi(argv[2]);
 
+            // Validate message
             message = argv[3];
-            if (!isValidMessage(message)) {
+            if (message.length() > MAX_UDP_MESSAGE_SIZE) {
                 throw std::invalid_argument("Message is too long for a single UDP packet.");
             }
+            if (!isValidMessage(message)) {
+                throw std::invalid_argument("Message contains invalid characters.");
+            }
         } else if (argc == 3) {
+            // Validate server
             server = argv[1];
+            if (server.length() > MAX_SERVER_LENGTH) {
+                throw std::invalid_argument("Server address is too long.");
+            }
             if (!isValidServer(server)) {
                 throw std::invalid_argument("Invalid server address or domain name.");
             }
 
+            // Validate port
+            if (argv[2].length() > MAX_PORT_LENGTH) {
+                throw std::invalid_argument("Port number is too long.");
+            }
             if (!isValidPort(argv[2])) {
                 throw std::invalid_argument("Invalid port number. Must be between 1 and 65535.");
             }
@@ -108,31 +125,24 @@ int main(int argc, char* argv[]) {
 
             // Use std::cin.read() to limit message input to MAX_UDP_MESSAGE_SIZE
             char buffer[MAX_UDP_MESSAGE_SIZE + 1];  // +1 for the null terminator
-
             std::cout << "Enter the message to send: ";
-
-            // Read up to MAX_UDP_MESSAGE_SIZE characters
             std::cin.read(buffer, MAX_UDP_MESSAGE_SIZE);
 
             // Handle overflow if the input exceeds MAX_UDP_MESSAGE_SIZE
             if (std::cin.gcount() == MAX_UDP_MESSAGE_SIZE) {
                 std::cout << "Warning: Input exceeds the maximum allowed size. Truncating input." << std::endl;
-                // Optionally clear the rest of the input buffer
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }
+            buffer[std::cin.gcount()] = '\0'; // Null-terminate the string
 
-            // Null-terminate the string
-            buffer[std::cin.gcount()] = '\0';
-
-            // Convert buffer to string
             message = buffer;
 
-            // Validation after reading the input
+            // Validate message after input
             if (message.empty()) {
                 throw std::invalid_argument("Message cannot be empty.");
             }
             if (!isValidMessage(message)) {
-                throw std::invalid_argument("Message is too long for a single UDP packet.");
+                throw std::invalid_argument("Message contains invalid characters.");
             }
         } else {
             printUsage(argv[0]);
