@@ -1,4 +1,4 @@
-// udpsend v0.5 Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
+// udpsend v0.6alpha Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License Version 3 as
@@ -22,6 +22,7 @@
 #include <idn2.h> // For IDN conversion
 
 #ifdef _WIN32
+#define NOMINMAX // Prevent Windows headers from defining min/max macros
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
@@ -36,7 +37,7 @@ const size_t MAX_SERVER_LENGTH = 200;     // Max length for server string (IPv4,
 const size_t MAX_PORT_LENGTH = 5;         // Max length for port string
 
 void printUsage(const char* progName) {
-    std::cerr << std::endl << " udpsend v0.5 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
+    std::cerr << std::endl << " udpsend v0.6alpha Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
     std::cerr << " https://github.com/Flashdown/udpsend" << std::endl << std::endl;
 
     std::cerr << " This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
