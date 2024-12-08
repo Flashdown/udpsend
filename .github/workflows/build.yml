@@ -79,17 +79,24 @@ jobs:
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
 
           REM Install libidn2 via vcpkg
-          C:\vcpkg\vcpkg.exe install libidn2
+          C:\vcpkg\vcpkg.exe install libidn2:x64-windows
           if errorlevel 1 exit /b %errorlevel%
 
           echo Checking vcpkg include directory:
           dir "C:\vcpkg\installed\x64-windows\include\"
 
+          echo Checking vcpkg lib directory:
+          dir "C:\vcpkg\installed\x64-windows\lib\"
+
           echo Checking vcpkg root directory:
           dir "C:\vcpkg\"
 
+          set VCPKG_ROOT=C:\vcpkg\
+
+          C:\vcpkg\vcpkg.exe integrate install
+
           REM Build with vcpkg's installed libidn2
-          cl /EHsc /O2 /MD udpsend.cpp /I "C:\vcpkg\installed\x64-windows\include" /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" libidn2.lib ws2_32.lib /Feudpsend.exe
+          cl /EHsc /O2 /MD udpsend.cpp /I"C:\vcpkg\installed\x64-windows\include\" libidn2.lib ws2_32.lib /Feudpsend.exe /link /LIBPATH:"C:\vcpkg\installed\x64-windows\lib\"
 
       # Test the program (optional)
       - name: Test udpsend (Linux)
