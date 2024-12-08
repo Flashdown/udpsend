@@ -33,6 +33,7 @@ jobs:
           brew update
           brew install gcc make libidn2
 
+      # Windows: Set up MSVC environment and install libidn2 using vcpkg
       - name: Set up MSVC compiler and install libidn2 (Windows)
         if: runner.os == 'Windows'
         shell: cmd
@@ -48,14 +49,8 @@ jobs:
           REM Install libidn2 via vcpkg
           "%VCPKG_ROOT%\vcpkg.exe" install libidn2
 
-          REM Integrate vcpkg with Visual Studio
-          "%VCPKG_ROOT%\vcpkg.exe" integrate install
-
-          REM Set environment variables for MSVC and vcpkg
-          set INCLUDE=%VCPKG_ROOT%\installed\x64-windows\include;%INCLUDE%
-          set LIB=%VCPKG_ROOT%\installed\x64-windows\lib;%LIB%
-
-          REM Use vswhere to find Visual Studio installation path
+          REM Set the environment variables for MSVC and vcpkg
+          set PATH=%VCPKG_ROOT%\vcpkg.exe;%PATH%
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
           set /p VS_PATH=<vs_path.txt
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
@@ -77,14 +72,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          REM Set environment variables for MSVC and vcpkg
-          set PATH=%VCPKG_ROOT%\vcpkg.exe;%PATH%
-          set INCLUDE=%VCPKG_ROOT%\installed\x64-windows\include;%INCLUDE%
-          set LIB=%VCPKG_ROOT%\installed\x64-windows\lib;%LIB%
+          REM Set up MSVC environment
+          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
+          set /p VS_PATH=<vs_path.txt
+          call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
 
           REM Build with vcpkg's installed libidn2
-          cl /EHsc /O2 /MD udpsend.cpp libidn2.lib ws2_32.lib /Feudpsend.exe
-          
+          cl /EHsc /O2 /MD udpsend.cpp /I"%VCPKG_ROOT%\installed\x64-windows\include" /LIBPATH:"%VCPKG_ROOT%\installed\x64-windows\lib" libidn2.lib ws2_32.lib /Feudpsend.exe
+
       # Test the program (optional)
       - name: Test udpsend (Linux)
         if: runner.os == 'Linux'
@@ -105,7 +100,7 @@ jobs:
           echo "Testing udpsend on Windows"
           udpsend.exe 127.0.0.1 12345 "Test Message"
 
-      # Upload the binary artifact
+       # Upload the binary artifact
       - name: Upload artifact (Linux)
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v3
