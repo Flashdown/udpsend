@@ -11,12 +11,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
 
     steps:
       # Checkout code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Linux: Set up C++ compiler
       - name: Set up C++ compiler (Linux)
@@ -59,49 +59,55 @@ jobs:
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt
           set /p VS_PATH=<vs_path.txt
           call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
-          cl /EHsc /O2 /MD udpsend.cpp ws2_32.lib /Feudpsend.exe
+          cl /EHsc /O2 /MD udpsend.cpp ws2_32.lib shell32.lib /Feudpsend.exe
 
       # Test the program (optional)
       - name: Test udpsend (Linux)
         if: runner.os == 'Linux'
         run: |
           echo "Testing udpsend on Linux"
-          ./udpsend_linux 127.0.0.1 12345 "Test Message"
+          ./udpsend_linux -4 127.0.0.1 12345 "Test Message"
 
       - name: Test udpsend (macOS)
         if: runner.os == 'macOS'
         run: |
           echo "Testing udpsend on macOS"
-          ./udpsend_macos 127.0.0.1 12345 "Test Message"
+          ./udpsend_macos -4 127.0.0.1 12345 "Test Message"
 
       - name: Test udpsend (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
           echo "Testing udpsend on Windows"
-          udpsend.exe 127.0.0.1 12345 "Test Message"
+          udpsend.exe -4 127.0.0.1 12345 "Test Message"
 
-       # Upload the binary artifact
+      # Upload the binary artifact
       - name: Upload artifact (Linux)
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: udpsend
+          name: udpsend-linux
           path: ./udpsend_linux
+          if-no-files-found: error
+          compression-level: 0
 
       - name: Upload artifact (macOS)
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: udpsend
+          name: udpsend-macos
           path: ./udpsend_macos
+          if-no-files-found: error
+          compression-level: 0
 
       - name: Upload artifact (Windows)
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: udpsend
+          name: udpsend-windows
           path: ./udpsend.exe
+          if-no-files-found: error
+          compression-level: 0
 
   release:
     name: Create Release
@@ -110,19 +116,34 @@ jobs:
 
     steps:
       # Download the artifacts from the build job
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
         with:
-          path: ./artifacts
+          name: udpsend-linux
+          path: ./artifacts/udpsend-linux
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: udpsend-macos
+          path: ./artifacts/udpsend-macos
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: udpsend-windows
+          path: ./artifacts/udpsend-windows
 
       - name: List downloaded artifacts
-        run: ls -la ./artifacts/udpsend/;ls -la ./artifacts/;
+        run: ls -la ./artifacts/udpsend-linux; ls -la ./artifacts/udpsend-macos; ls -la ./artifacts/udpsend-windows
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./artifacts/udpsend/*
+          files: |
+            ./artifacts/udpsend-linux/udpsend_linux
+            ./artifacts/udpsend-macos/udpsend_macos
+            ./artifacts/udpsend-windows/udpsend.exe
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
- 
