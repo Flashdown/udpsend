@@ -1,4 +1,4 @@
-// udpsend v0.7 Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
+// udpsend v0.8 Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License Version 3 as
@@ -39,7 +39,7 @@ const size_t MAX_SERVER_LENGTH = 200;
 const size_t MAX_PORT_LENGTH = 5;
 
 static void printUsage(const char* progName) {
-    std::cerr << std::endl << " udpsend v0.7 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
+    std::cerr << std::endl << " udpsend v0.8 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
     std::cerr << " https://github.com/Flashdown/udpsend" << std::endl << std::endl;
     std::cerr << " This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
     std::cerr << " This is free software, and you are welcome to redistribute it" << std::endl;
@@ -134,6 +134,31 @@ static std::string wideToUtf8(const std::wstring& wstr) {
 }
 #endif
 
+static int determineAddressFamily(const std::string& server, const std::string& port) {
+    struct addrinfo hints, * res, * p;
+    std::memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC; // Allow both IPv4 and IPv6
+
+    if (getaddrinfo(server.c_str(), port.c_str(), &hints, &res) != 0) {
+        return AF_UNSPEC;
+    }
+
+    // Prioritize AF_INET (IPv4) over AF_INET6 (IPv6)
+    int selected_family = AF_UNSPEC;
+    for (p = res; p != nullptr; p = p->ai_next) {
+        if (p->ai_family == AF_INET) {
+            selected_family = AF_INET;
+            break; // Prefer IPv4
+        }
+        else if (p->ai_family == AF_INET6 && selected_family != AF_INET) {
+            selected_family = AF_INET6; // Use IPv6 only if no IPv4 found
+        }
+    }
+
+    freeaddrinfo(res);
+    return selected_family;
+}
+
 int main(int argc, char* argv[]) {
     std::string server;
     long port = 0;
@@ -142,19 +167,31 @@ int main(int argc, char* argv[]) {
     bool useHex = false;
 
 #ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cerr << "WSAStartup failed" << std::endl;
+        return EXIT_FAILURE;
+    }
+#endif
+
+    std::vector<std::string> utf8_argv;
+#ifdef _WIN32
     int wargc;
     wchar_t** wargv = CommandLineToArgvW(GetCommandLineW(), &wargc);
     if (!wargv) {
         std::cerr << "Failed to get command-line arguments" << std::endl;
+#ifdef _WIN32
+        WSACleanup();
+#endif
         return EXIT_FAILURE;
     }
-    std::vector<std::string> utf8_argv(wargc);
+    utf8_argv.resize(wargc);
     for (int i = 0; i < wargc; ++i) {
         utf8_argv[i] = wideToUtf8(wargv[i]);
     }
     LocalFree(wargv);
 #else
-    std::vector<std::string> utf8_argv(argv, argv + argc);
+    utf8_argv.assign(argv, argv + argc);
 #endif
 
     try {
@@ -287,24 +324,10 @@ int main(int argc, char* argv[]) {
                 ai_family = AF_INET6;
             }
             else if (isValidDomain(server)) {
-#ifndef _WIN32
-                // On non-Windows (e.g., Linux), resolve domain to determine address family
-                struct addrinfo hints, * res;
-                std::memset(&hints, 0, sizeof(hints));
-                hints.ai_family = AF_UNSPEC;
-                hints.ai_socktype = SOCK_DGRAM;
-
-                if (getaddrinfo(server.c_str(), std::to_string(port).c_str(), &hints, &res) == 0) {
-                    ai_family = res->ai_family; // Use the first resolved address family
-                    freeaddrinfo(res);
+                ai_family = determineAddressFamily(server, std::to_string(port));
+                if (ai_family == AF_UNSPEC) {
+                    throw std::invalid_argument("Unable to resolve domain name to a supported address family.");
                 }
-                else {
-                    throw std::invalid_argument("Unable to resolve domain name.");
-                }
-#else
-                // On Windows, keep AF_UNSPEC for domains to match original behavior
-                ai_family = AF_UNSPEC;
-#endif
             }
             else {
                 throw std::invalid_argument("Invalid server address or domain name.");
@@ -313,16 +336,11 @@ int main(int argc, char* argv[]) {
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-
 #ifdef _WIN32
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "WSAStartup failed" << std::endl;
+        WSACleanup();
+#endif
         return EXIT_FAILURE;
     }
-#endif
 
 #ifdef _WIN32
     SOCKET sockfd = socket(ai_family, SOCK_DGRAM, IPPROTO_UDP);
