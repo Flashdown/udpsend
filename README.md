@@ -34,6 +34,10 @@ udpsend [options] <server> <port> <message>
 - `-6`: Force IPv6 address family.
 - `-h`: Send message as hexadecimal string (e.g., `48656C6C6F` for "Hello").
 
+* **server**: IPv4, IPv6 address, or FQDN
+* **port**: Port number to send the message to
+* **message**: Message to send via UDP
+
 ### Examples
 Sending a string:
 ```console
@@ -51,6 +55,3 @@ Forcing IPv6:
 ```console
 udpsend -6 myinvalidserver.invalid 1234 "Hello IPv6"
 ```
-* **server**: IPv4, IPv6 address, or FQDN
-* **port**: Port number to send the message to
-* **message**: Message to send via UDP
