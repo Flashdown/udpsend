@@ -22,7 +22,7 @@ udpsend is a simple UDP sender tool written in C++ that allows sending a string 
 ## Interactive Usage
 Enter the message interactively by omitting the `<message>` argument:
 ```console
-udpsend <server> <port>
+udpsend [options] <server> <port>
 ```
 
 ## Normal Usage
