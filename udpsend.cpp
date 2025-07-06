@@ -1,4 +1,4 @@
-// udpsend v0.8 Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
+// udpsend v0.9 Copyright (C) 2024 Enrico Heine https://github.com/Flashdown/udpsend
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License Version 3 as
@@ -20,6 +20,8 @@
 #include <stdexcept>
 #include <limits>
 #include <vector>
+#include <cstddef> // For std::size_t, std::ptrdiff_t
+#include <iosfwd>  // For std::streamsize
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -32,25 +34,70 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netinet/icmp6.h>
+#include <sys/socket.h>
 #endif
 
-const size_t MAX_UDP_MESSAGE_SIZE = 65507;
-const size_t MAX_SERVER_LENGTH = 200;
-const size_t MAX_PORT_LENGTH = 5;
+const std::size_t MAX_UDP_MESSAGE_SIZE = 65507;
+const std::size_t MAX_ICMP_MESSAGE_SIZE = 1472; // Max ICMP/ICMPv6 payload (1500 MTU - 20 IP or 40 IPv6 - 8 ICMP)
+const std::size_t MAX_SERVER_LENGTH = 200;
+const std::size_t MAX_PORT_LENGTH = 5;
+
+// ICMP header structure (IPv4)
+struct icmp_hdr {
+    uint8_t type;
+    uint8_t code;
+    uint16_t checksum;
+    uint16_t id;
+    uint16_t sequence;
+};
+
+#ifdef _WIN32
+// ICMPv6 header structure (Windows)
+struct icmp6_hdr {
+    uint8_t icmp6_type;
+    uint8_t icmp6_code;
+    uint16_t icmp6_cksum;
+    uint16_t icmp6_id;
+    uint16_t icmp6_seq;
+};
+
+// ICMPv6 echo request type
+#define ICMP6_ECHO_REQUEST 128
+#endif
+
+// Compute Internet checksum
+static uint16_t checksum(const uint16_t* buffer, std::size_t len) {
+    uint32_t sum = 0;
+    while (len > 1) {
+        sum += *buffer++;
+        len -= 2;
+    }
+    if (len) {
+        sum += *(uint8_t*)buffer;
+    }
+    sum = (sum >> 16) + (sum & 0xFFFF);
+    sum += (sum >> 16);
+    return (uint16_t)(~sum);
+}
 
 static void printUsage(const char* progName) {
-    std::cerr << std::endl << " udpsend v0.8 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
+    std::cerr << std::endl << " udpsend v0.9 Copyright (C) 2024 Enrico Heine" << std::endl << std::endl;
     std::cerr << " https://github.com/Flashdown/udpsend" << std::endl << std::endl;
     std::cerr << " This program comes with ABSOLUTELY NO WARRANTY;" << std::endl;
     std::cerr << " This is free software, and you are welcome to redistribute it" << std::endl;
     std::cerr << " under the conditions of the GNU General Public License Version 3" << std::endl << std::endl;
-    std::cerr << "Usage: " << progName << " [-4 | -6] [-h] <server> <port> [<message>]" << std::endl;
+    std::cerr << "Usage: " << progName << " [-4 | -6] [-h] [-i] <server> <port> [<message>]" << std::endl << std::endl;
     std::cerr << "  -4: Force IPv4" << std::endl;
     std::cerr << "  -6: Force IPv6" << std::endl;
     std::cerr << "  -h: Input message as HEX string" << std::endl;
+    std::cerr << "  -i: Send message as ICMP/ICMPv6 echo request payload (max 1472 bytes)" << std::endl << "      Usage: " << progName << " -i [-4 | -6] [-h] <server> [<message>]" << std::endl << std::endl;
     std::cerr << "  server: IPv4, IPv6 address or FQDN" << std::endl;
-    std::cerr << "  port:   Port number to send the message to (1-65535)" << std::endl;
-    std::cerr << "  message: Message to send via UDP (max 65507 bytes)" << std::endl;
+    std::cerr << "  port:   Port number (1-65535), inexistent argument when using -i" << std::endl;
+    std::cerr << "  message (ommit for interactive input): Message to send via UDP (max 65507 bytes) or ICMP (max 1472 bytes)" << std::endl << std::endl;
+    std::cerr << "Note: Sending as ICMP echo request payload (-i) requires administrative privileges under Linux." << std::endl;
 }
 
 static bool isValidPort(const std::string& portStr) {
@@ -87,7 +134,7 @@ static bool isValidServer(const std::string& server) {
 }
 
 static bool isValidMessage(const std::string& message) {
-    for (size_t i = 0; i < message.length();) {
+    for (std::size_t i = 0; i < message.length();) {
         unsigned char c = message[i];
         if (c <= 0x7F) {
             ++i;
@@ -116,7 +163,7 @@ static bool isValidHex(const std::string& hex) {
 static std::string hexToString(const std::string& hex) {
     std::string result;
     result.reserve(hex.length() / 2);
-    for (size_t i = 0; i < hex.length(); i += 2) {
+    for (std::size_t i = 0; i < hex.length(); i += 2) {
         std::string byte = hex.substr(i, 2);
         char chr = static_cast<char>(std::stoi(byte, nullptr, 16));
         result.push_back(chr);
@@ -137,21 +184,20 @@ static std::string wideToUtf8(const std::wstring& wstr) {
 static int determineAddressFamily(const std::string& server, const std::string& port) {
     struct addrinfo hints, * res, * p;
     std::memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC; // Allow both IPv4 and IPv6
+    hints.ai_family = AF_UNSPEC;
 
-    if (getaddrinfo(server.c_str(), port.c_str(), &hints, &res) != 0) {
+    if (getaddrinfo(server.c_str(), port.empty() ? nullptr : port.c_str(), &hints, &res) != 0) {
         return AF_UNSPEC;
     }
 
-    // Prioritize AF_INET (IPv4) over AF_INET6 (IPv6)
     int selected_family = AF_UNSPEC;
     for (p = res; p != nullptr; p = p->ai_next) {
         if (p->ai_family == AF_INET) {
             selected_family = AF_INET;
-            break; // Prefer IPv4
+            break;
         }
         else if (p->ai_family == AF_INET6 && selected_family != AF_INET) {
-            selected_family = AF_INET6; // Use IPv6 only if no IPv4 found
+            selected_family = AF_INET6;
         }
     }
 
@@ -161,10 +207,12 @@ static int determineAddressFamily(const std::string& server, const std::string& 
 
 int main(int argc, char* argv[]) {
     std::string server;
+    std::string portStr;
     long port = 0;
     std::string message;
     int ai_family = AF_UNSPEC;
     bool useHex = false;
+    bool useIcmp = false;
 
 #ifdef _WIN32
     WSADATA wsaData;
@@ -180,9 +228,7 @@ int main(int argc, char* argv[]) {
     wchar_t** wargv = CommandLineToArgvW(GetCommandLineW(), &wargc);
     if (!wargv) {
         std::cerr << "Failed to get command-line arguments" << std::endl;
-#ifdef _WIN32
         WSACleanup();
-#endif
         return EXIT_FAILURE;
     }
     utf8_argv.resize(wargc);
@@ -209,12 +255,17 @@ int main(int argc, char* argv[]) {
                 useHex = true;
                 arg_offset++;
             }
+            else if (utf8_argv[i] == "-i") {
+                useIcmp = true;
+                arg_offset++;
+            }
             else {
                 throw std::invalid_argument("Unknown option: " + utf8_argv[i]);
             }
         }
 
-        if (argc == 4 + arg_offset) {
+        int expected_args = useIcmp ? 2 : 3; // 2 for ICMP (server, [message]), 3 for UDP (server, port, [message])
+        if (argc == expected_args + arg_offset || argc == expected_args + 1 + arg_offset) {
             server = utf8_argv[1 + arg_offset];
             if (server.length() > MAX_SERVER_LENGTH) {
                 throw std::invalid_argument("Server address is too long.");
@@ -223,90 +274,89 @@ int main(int argc, char* argv[]) {
                 throw std::invalid_argument("Invalid server address or domain name.");
             }
 
-            if (utf8_argv[2 + arg_offset].length() > MAX_PORT_LENGTH) {
-                throw std::invalid_argument("Port number is too long.");
-            }
-            if (!isValidPort(utf8_argv[2 + arg_offset])) {
-                throw std::invalid_argument("Invalid port number. Must be between 1 and 65535.");
-            }
-            port = std::stol(utf8_argv[2 + arg_offset]);
-
-            message = utf8_argv[3 + arg_offset];
-            if (useHex) {
-                if (!isValidHex(message)) {
-                    throw std::invalid_argument("Invalid HEX string. Must be valid hexadecimal with even length.");
+            if (!useIcmp) {
+                // UDP mode requires port
+                portStr = utf8_argv[2 + arg_offset];
+                if (portStr.length() > MAX_PORT_LENGTH) {
+                    throw std::invalid_argument("Port number is too long.");
                 }
-                message = hexToString(message);
+                if (!isValidPort(portStr)) {
+                    throw std::invalid_argument("Invalid port number. Must be between 1 and 65535.");
+                }
+                port = std::stol(portStr);
+                // Assign message for UDP if provided
+                if (argc == expected_args + 1 + arg_offset) {
+                    message = utf8_argv[3 + arg_offset];
+                }
+            }
+            else if (argc == expected_args + 1 + arg_offset) {
+                // ICMP mode with optional message
+                message = utf8_argv[2 + arg_offset];
+            }
+
+            // Validate message if provided on command line
+            if (!message.empty()) {
+                if (useHex) {
+                    if (!isValidHex(message)) {
+                        throw std::invalid_argument("Invalid HEX string. Must be valid hexadecimal with even length.");
+                    }
+                    message = hexToString(message);
+                }
+                else {
+                    if (!isValidMessage(message)) {
+                        throw std::invalid_argument("Message contains invalid characters.");
+                    }
+                }
             }
             else {
-                if (!isValidMessage(message)) {
-                    throw std::invalid_argument("Message contains invalid characters.");
-                }
-            }
-            if (message.length() > MAX_UDP_MESSAGE_SIZE) {
-                throw std::invalid_argument("Message is too long for a single UDP packet.");
-            }
-        }
-        else if (argc == 3 + arg_offset) {
-            server = utf8_argv[1 + arg_offset];
-            if (server.length() > MAX_SERVER_LENGTH) {
-                throw std::invalid_argument("Server address is too long.");
-            }
-            if (!isValidServer(server)) {
-                throw std::invalid_argument("Invalid server address or domain name.");
-            }
-
-            if (utf8_argv[2 + arg_offset].length() > MAX_PORT_LENGTH) {
-                throw std::invalid_argument("Port number is too long.");
-            }
-            if (!isValidPort(utf8_argv[2 + arg_offset])) {
-                throw std::invalid_argument("Invalid port number. Must be between 1 and 65535.");
-            }
-            port = std::stol(utf8_argv[2 + arg_offset]);
-
+                // Prompt for message if not provided
 #ifdef _WIN32
-            std::vector<wchar_t> wbuffer(MAX_UDP_MESSAGE_SIZE + 1);
-            if (useHex) {
-                std::cout << "Enter the HEX message to send: ";
-            }
-            else {
-                std::cout << "Enter the message to send: ";
-            }
-            DWORD charsRead = 0;
-            HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-            if (!ReadConsoleW(hStdin, wbuffer.data(), static_cast<DWORD>(MAX_UDP_MESSAGE_SIZE), &charsRead, NULL)) {
-                throw std::runtime_error("Failed to read console input.");
-            }
-            if (charsRead > 0 && wbuffer[charsRead - 1] == L'\n') --charsRead;
-            if (charsRead > 0 && wbuffer[charsRead - 1] == L'\r') --charsRead;
-            wbuffer[charsRead] = L'\0';
-            std::wstring wmessage(wbuffer.data(), charsRead);
-            message = wideToUtf8(wmessage);
+                std::vector<wchar_t> wbuffer(useIcmp ? MAX_ICMP_MESSAGE_SIZE + 1 : MAX_UDP_MESSAGE_SIZE + 1);
+                if (useHex) {
+                    std::cout << "Enter the HEX message to send: ";
+                }
+                else {
+                    std::cout << "Enter the message to send: ";
+                }
+                DWORD charsRead = 0;
+                HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+                if (!ReadConsoleW(hStdin, wbuffer.data(), static_cast<DWORD>(useIcmp ? MAX_ICMP_MESSAGE_SIZE : MAX_UDP_MESSAGE_SIZE), &charsRead, NULL)) {
+                    throw std::runtime_error("Failed to read console input.");
+                }
+                if (charsRead > 0 && wbuffer[charsRead - 1] == L'\n') --charsRead;
+                if (charsRead > 0 && wbuffer[charsRead - 1] == L'\r') --charsRead;
+                wbuffer[charsRead] = L'\0';
+                std::wstring wmessage(wbuffer.data(), charsRead);
+                message = wideToUtf8(wmessage);
 #else
-            if (useHex) {
-                std::cout << "Enter the HEX message to send: ";
-            }
-            else {
-                std::cout << "Enter the message to send: ";
-            }
-            std::getline(std::cin, message);
+                if (useHex) {
+                    std::cout << "Enter the HEX message to send: ";
+                }
+                else {
+                    std::cout << "Enter the message to send: ";
+                }
+                std::getline(std::cin, message);
 #endif
+                if (message.empty()) {
+                    throw std::invalid_argument("Message cannot be empty.");
+                }
+                if (useHex) {
+                    if (!isValidHex(message)) {
+                        throw std::invalid_argument("Invalid HEX string. Must be valid hexadecimal with even length.");
+                    }
+                    message = hexToString(message);
+                }
+                else {
+                    if (!isValidMessage(message)) {
+                        throw std::invalid_argument("Message contains invalid characters.");
+                    }
+                }
+            }
 
-            if (message.empty()) {
-                throw std::invalid_argument("Message cannot be empty.");
+            if (useIcmp && message.length() > MAX_ICMP_MESSAGE_SIZE) {
+                throw std::invalid_argument("Message is too long for ICMP/ICMPv6 payload (max 1472 bytes).");
             }
-            if (useHex) {
-                if (!isValidHex(message)) {
-                    throw std::invalid_argument("Invalid HEX string. Must be valid hexadecimal with even length.");
-                }
-                message = hexToString(message);
-            }
-            else {
-                if (!isValidMessage(message)) {
-                    throw std::invalid_argument("Message contains invalid characters.");
-                }
-            }
-            if (message.length() > MAX_UDP_MESSAGE_SIZE) {
+            else if (!useIcmp && message.length() > MAX_UDP_MESSAGE_SIZE) {
                 throw std::invalid_argument("Message is too long for a single UDP packet.");
             }
         }
@@ -315,7 +365,6 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        // Determine address family if not specified by -4 or -6
         if (ai_family == AF_UNSPEC) {
             if (isValidIPv4(server)) {
                 ai_family = AF_INET;
@@ -324,7 +373,7 @@ int main(int argc, char* argv[]) {
                 ai_family = AF_INET6;
             }
             else if (isValidDomain(server)) {
-                ai_family = determineAddressFamily(server, std::to_string(port));
+                ai_family = determineAddressFamily(server, portStr);
                 if (ai_family == AF_UNSPEC) {
                     throw std::invalid_argument("Unable to resolve domain name to a supported address family.");
                 }
@@ -343,14 +392,30 @@ int main(int argc, char* argv[]) {
     }
 
 #ifdef _WIN32
-    SOCKET sockfd = socket(ai_family, SOCK_DGRAM, IPPROTO_UDP);
+    SOCKET sockfd = INVALID_SOCKET;
+    if (useIcmp) {
+        sockfd = socket(ai_family, SOCK_RAW, ai_family == AF_INET ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+    }
+    else {
+        sockfd = socket(ai_family, SOCK_DGRAM, IPPROTO_UDP);
+    }
     if (sockfd == INVALID_SOCKET) {
         std::cerr << "Socket creation failed: " << WSAGetLastError() << std::endl;
         WSACleanup();
         return EXIT_FAILURE;
     }
 #else
-    int sockfd = socket(ai_family, SOCK_DGRAM, 0);
+    int sockfd = -1;
+    int protocol = IPPROTO_UDP; // Default to UDP
+    if (useIcmp) {
+        if (ai_family == AF_INET) {
+            protocol = IPPROTO_ICMP;
+        }
+        else {
+            protocol = IPPROTO_ICMPV6;
+        }
+    }
+    sockfd = socket(ai_family, useIcmp ? SOCK_RAW : SOCK_DGRAM, protocol);
     if (sockfd < 0) {
         perror("Failed to create socket");
         return EXIT_FAILURE;
@@ -360,9 +425,9 @@ int main(int argc, char* argv[]) {
     struct addrinfo hints, * res;
     std::memset(&hints, 0, sizeof(hints));
     hints.ai_family = ai_family;
-    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_socktype = useIcmp ? SOCK_RAW : SOCK_DGRAM;
 
-    if (getaddrinfo(server.c_str(), std::to_string(port).c_str(), &hints, &res) != 0) {
+    if (getaddrinfo(server.c_str(), useIcmp ? nullptr : portStr.c_str(), &hints, &res) != 0) {
 #ifdef _WIN32
         std::cerr << "Failed to resolve server address: " << WSAGetLastError() << std::endl;
         closesocket(sockfd);
@@ -374,7 +439,51 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    int sent = sendto(sockfd, message.c_str(), static_cast<int>(message.length()), 0, res->ai_addr, static_cast<int>(res->ai_addrlen));
+    int sent = -1;
+    if (useIcmp) {
+        if (ai_family == AF_INET) {
+            // IPv4 ICMP
+            std::size_t packet_size = sizeof(icmp_hdr) + message.length();
+            std::vector<char> packet(packet_size);
+            icmp_hdr* icmp = reinterpret_cast<icmp_hdr*>(packet.data());
+            icmp->type = 8; // Echo request
+            icmp->code = 0;
+            icmp->checksum = 0;
+#ifdef _WIN32
+            icmp->id = htons(static_cast<uint16_t>(GetCurrentProcessId() & 0xFFFF));
+#else
+            icmp->id = htons(getpid() & 0xFFFF);
+#endif
+            icmp->sequence = htons(1);
+            std::memcpy(packet.data() + sizeof(icmp_hdr), message.c_str(), message.length());
+            icmp->checksum = checksum(reinterpret_cast<uint16_t*>(packet.data()), packet_size);
+
+            sent = sendto(sockfd, packet.data(), static_cast<int>(packet_size), 0, res->ai_addr, static_cast<int>(res->ai_addrlen));
+        }
+        else {
+            // IPv6 ICMPv6
+            std::size_t packet_size = sizeof(icmp6_hdr) + message.length();
+            std::vector<char> packet(packet_size);
+            icmp6_hdr* icmp6 = reinterpret_cast<icmp6_hdr*>(packet.data());
+            icmp6->icmp6_type = ICMP6_ECHO_REQUEST;
+            icmp6->icmp6_code = 0;
+            icmp6->icmp6_cksum = 0;
+#ifdef _WIN32
+            icmp6->icmp6_id = htons(static_cast<uint16_t>(GetCurrentProcessId() & 0xFFFF));
+#else
+            icmp6->icmp6_id = htons(getpid() & 0xFFFF);
+#endif
+            icmp6->icmp6_seq = htons(1);
+            std::memcpy(packet.data() + sizeof(icmp6_hdr), message.c_str(), message.length());
+            icmp6->icmp6_cksum = checksum(reinterpret_cast<uint16_t*>(packet.data()), packet_size);
+
+            sent = sendto(sockfd, packet.data(), static_cast<int>(packet_size), 0, res->ai_addr, static_cast<int>(res->ai_addrlen));
+        }
+    }
+    else {
+        sent = sendto(sockfd, message.c_str(), static_cast<int>(message.length()), 0, res->ai_addr, static_cast<int>(res->ai_addrlen));
+    }
+
     if (sent == -1) {
 #ifdef _WIN32
         std::cerr << "Failed to send message: " << WSAGetLastError() << std::endl;
@@ -388,7 +497,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::cout << "Message sent successfully to " << server << ":" << port << std::endl;
+    std::cout << "Message sent successfully to " << server << (useIcmp ? " via ICMP" + std::string(ai_family == AF_INET ? "" : "v6") : ":" + portStr) << std::endl;
 
     freeaddrinfo(res);
 #ifdef _WIN32
