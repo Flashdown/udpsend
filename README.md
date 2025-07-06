@@ -23,7 +23,7 @@ udpsend is a simple UDP sender tool written in C++ that allows sending a string 
 ## ICMP Usage `-i`
 Send message as ICMP/ICMPv6 echo request payload:
 ```console
-udpsend -i [options] <server>
+udpsend -i [options] <server> [<message>]
 ```
 
 ## Interactive Usage
@@ -34,7 +34,7 @@ udpsend [options] <server> <port>
 
 ## Normal Usage
 ```console
-udpsend [options] <server> <port> <message>
+udpsend [options] <server> <port> [<message>]
 ```
 ### Options
 - `-4`: Force IPv4 address family.
