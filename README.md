@@ -2,13 +2,13 @@
 [![Build udpsend](https://github.com/Flashdown/udpsend/actions/workflows/build.yml/badge.svg)](https://github.com/Flashdown/udpsend/actions/workflows/build.yml) [![Github All Releases](https://img.shields.io/github/downloads/Flashdown/udpsend/total.svg)](https://github.com/Flashdown/udpsend/releases/latest) [![Latest release](https://img.shields.io/github/v/release/Flashdown/udpsend?color=blue&label=latest%20release)](https://github.com/Flashdown/udpsend/releases/latest)
 
 # udpsend 
-udpsend is a simple UDP sender tool written in C++ that allows sending a string or message via UDP to a specific IP and port. Version 0.8 is considered stable and includes all features intended so far.
+udpsend is a simple UDP sender tool written in C++ that allows sending a string or message via UDP to a specific IP and port.
 
-## udpsend v0.8 - Download latest binary releases
+## udpsend v0.9 - Download latest binary releases
 
-* **Windows**: https://github.com/Flashdown/udpsend/releases/download/udpsend_v0.8/udpsend.exe
-* **Linux**: https://github.com/Flashdown/udpsend/releases/download/udpsend_v0.8/udpsend_linux
-* **MacOS**: https://github.com/Flashdown/udpsend/releases/download/udpsend_v0.8/udpsend_macos
+* **Windows**: https://github.com/Flashdown/udpsend/releases/download/udpsend_v0.9/udpsend.exe
+* **Linux**: https://github.com/Flashdown/udpsend/releases/download/udpsend_v0.9/udpsend_linux
+* **MacOS**: https://github.com/Flashdown/udpsend/releases/download/udpsend_v0.9/udpsend_macos
 * **Android**: I have created udpsend as a free GUI based Android App as well: https://play.google.com/store/apps/details?id=com.flashdown.udpsend (not open source).
 
 ## Features
@@ -18,6 +18,13 @@ udpsend is a simple UDP sender tool written in C++ that allows sending a string 
 - IPv4/IPv6 selection with `-4` and `-6` flags to force address family.
 - Hex input support with `-h` flag to send messages as hexadecimal strings (converted to binary).
 - UTF-8 encoded command-line arguments on Windows.
+- ICMP `-i`, send message as ICMP/ICMPv6 echo request payload (max 1472 bytes)
+
+## ICMP Usage `-i`
+Send message as ICMP/ICMPv6 echo request payload:
+```console
+udpsend -i [options] <server>
+```
 
 ## Interactive Usage
 Enter the message interactively by omitting the `<message>` argument:
@@ -33,6 +40,7 @@ udpsend [options] <server> <port> <message>
 - `-4`: Force IPv4 address family.
 - `-6`: Force IPv6 address family.
 - `-h`: Send message as hexadecimal string (e.g., `48656C6C6F` for "Hello").
+- `-i`: Send message as ICMP/ICMPv6 echo request payload (max 1472 bytes)
 
 * **server**: IPv4, IPv6 address, or FQDN
 * **port**: Port number to send the message to
